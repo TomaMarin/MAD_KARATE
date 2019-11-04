@@ -1,6 +1,8 @@
 import org.knowm.xchart.CategoryChart;
 import org.knowm.xchart.CategorySeries;
 import org.knowm.xchart.SwingWrapper;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 import org.knowm.xchart.style.markers.SeriesMarkers;
@@ -110,6 +112,99 @@ public class Main {
         relFrequencyChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         relFrequencyChart.getStyler().setMarkerSize(16);
 //        new SwingWrapper(relFrequencyChart).displayChart();
+
+        TreeMap<Integer, List<Integer>> neighboursOfAllNodes = new TreeMap<>();
+        for (int i = 1; i < matrixArray.length; i++) {
+            neighboursOfAllNodes.put(i, new ArrayList<>());
+        }
+        findAllNeighboursOfNode(1, matrixArray);
+        for (int i = 1; i <= neighboursOfAllNodes.keySet().size(); i++) {
+
+            neighboursOfAllNodes.put(i, findAllNeighboursOfNode(i, matrixArray));
+        }
+
+//        int node = 2;
+        TreeMap<Integer, Double> nodesWithCoeficients = new TreeMap<>();
+        for (int i = 1; i < 35; i++) {
+            nodesWithCoeficients.put(i, 0.0);
+        }
+
+        double totalCoefNumber = 0.0;
+        System.out.println();
+        for (Integer node : nodesWithCoeficients.keySet()) {
+
+
+            int dsdsn = 0;
+            List<Integer> listOfNeighbours = neighboursOfAllNodes.get(node);
+            for (int i = 0; i < neighboursOfAllNodes.get(node).size(); i++) {
+                dsdsn += calculateNumberOfVerticesOfNeighbours(neighboursOfAllNodes.get(node).get(i), neighboursOfAllNodes.get(node), matrixArray);
+            }
+            int numberOfMaxNeighoubrs = (neighboursOfAllNodes.get(node).size() * ((neighboursOfAllNodes.get(node)).size() - 1));
+            double result = ((double) (dsdsn)) / (double) numberOfMaxNeighoubrs;
+            if (Double.isNaN(result)) {
+                nodesWithCoeficients.put(node, 0.0);
+
+
+            } else {
+                nodesWithCoeficients.put(node, result);
+                totalCoefNumber += result;
+            }
+
+            System.out.println("For node " + node + ", the CC is: " + nodesWithCoeficients.get(node));
+
+        }
+
+        totalCoefNumber = (totalCoefNumber) / 34;
+        System.out.println("Total average CC of nodes is: " + totalCoefNumber);
+      TreeMap<Integer,List<Integer> > nodesWithSameDegree  = findNodesWithSameDegree(histogramData,17);
+      double[] ccOfDegrees =   calculateCCOfDegreesOfNodes(nodesWithSameDegree,nodesWithCoeficients);
+      double[] degrees =   new double[18];
+        for (int i = 0; i <nodesWithSameDegree.keySet().size() ; i++) {
+            degrees[i] = (double)(i);
+        }
+        XYChart ccOfDegreesChart = new XYChartBuilder().width(600).height(500).title("Cluster coeficient of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - cc").build();
+        
+        ccOfDegreesChart.addSeries("Cluster coeficient of nodes' degrees", degrees, ccOfDegrees);
+        ccOfDegreesChart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Scatter);
+        ccOfDegreesChart.getStyler().setChartTitleVisible(false);
+        ccOfDegreesChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
+        ccOfDegreesChart.getStyler().setMarkerSize(16);
+        new SwingWrapper(ccOfDegreesChart).displayChart();
+    }
+
+
+    private static double[] calculateCCOfDegreesOfNodes(TreeMap<Integer,List<Integer>> data,  TreeMap<Integer, Double> nodesWithCoeficients){
+        double[] ccOfNodes = new double[data.keySet().size()];
+
+        for (int i = 1; i < ccOfNodes.length ; i++) {
+           double ccValOfAllNdodes = 0.0;
+            for (int j = 0; j < data.get(i).size() ; j++) {
+                ccValOfAllNdodes += nodesWithCoeficients.get(data.get(i).get(j));
+            }
+            ccOfNodes[i] = Double.isNaN(ccValOfAllNdodes/data.get(i).size()) ? 0.0 : ccValOfAllNdodes/data.get(i).size();
+        }
+        return  ccOfNodes;
+    }
+
+    private static int calculateNumberOfVerticesOfNeighbours(int node, List<Integer> neighboursList, int[][] matrix) {
+        int totalNumberOfVertices = 0;
+        for (int i = 1; i < matrix[node].length; i++) {
+            if (matrix[node][i] == 1 && neighboursList.contains(i)) {
+                totalNumberOfVertices++;
+            }
+        }
+        return (totalNumberOfVertices);
+    }
+
+    private static List<Integer> findAllNeighboursOfNode(int node, int[][] matrixArray) {
+        List<Integer> neighboursOfNode = new ArrayList<>();
+
+        for (int i = 1; i < matrixArray[node].length; i++) {
+            if (matrixArray[node][i] == 1) {
+                neighboursOfNode.add(i);
+            }
+        }
+        return neighboursOfNode;
     }
 
     private static int findMax(int[][] matrixArray) {
@@ -184,12 +279,32 @@ public class Main {
         for (int i = 1; i < freqs.length; i++) {
             freqs[i] = 0;
             for (int j = 1; j < data.size(); j++) {
-                if (i == data.get(j)) {
+                if (i == data.get(j) / 2) {
                     freqs[i]++;
                 }
             }
         }
         return freqs;
+    }
+
+    private static TreeMap<Integer, List<Integer>> findNodesWithSameDegree(HashMap<Integer, Integer> data, int maxNode) {
+        TreeMap<Integer, List<Integer>> nodesWithSameDegree = new TreeMap<>();
+        for (int i = 0; i <= maxNode; i++) {
+            nodesWithSameDegree.put(i, new ArrayList<>());
+        }
+
+        for (int i = 0; i < data.keySet().size(); i++) {
+            for (int j = 1; j <= maxNode; j++) {
+                if (j == data.get(i) / 2) {
+                    List<Integer> listOfNodes = nodesWithSameDegree.get(j);
+                    listOfNodes.add(i);
+                    nodesWithSameDegree.put(j, listOfNodes);
+                }
+            }
+
+        }
+        return  nodesWithSameDegree;
+
     }
 
 
@@ -257,11 +372,11 @@ public class Main {
             int dOfI = 0;
 
             for (int j = 1; j < pathArray.length; j++) {
-                if(i!=j){
+                if (i != j) {
                     dOfI += pathArray[i][j];
                 }
             }
-            System.out.println("for node "+ i + " is closeness "+ (double)(pathArray.length-1)/(double) dOfI);
+            System.out.println("for node " + i + " is closeness " + (double) (pathArray.length - 1) / (double) dOfI);
         }
 //         centrality = Arrays.stream(pathArray[1]).sum();
 //        return  (double)(pathArray.length)/centrality;
