@@ -16,3 +16,9 @@ KarateCLub/target/classes/Main.class
 *.lst
 
 KarateCLub/target/KarateCLub-1.0-SNAPSHOT.jar
+
+randomGraphGenerator/.idea/
+
+randomGraphGenerator/target/classes/
+
+*.iml

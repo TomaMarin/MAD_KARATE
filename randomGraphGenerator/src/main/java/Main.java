@@ -24,11 +24,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        final int NUMBER_OF_NODES = 55;
+        final int NUMBER_OF_NODES = 550;
 
 
         TreeMap<Integer, List<Integer>> graphOfVertices = generateRandomGraph(NUMBER_OF_NODES);
-        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdges = generateRandomEdges(graphOfVertices, 0.078);
+        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdges = generateRandomEdges(graphOfVertices, 0.0007);
         System.out.println("for global average degree equal lower than 1: " + calcGlobalAverage(graphOfVerticesWithEdges));
         int[][] matrixWithOfProbLessThanZero = floydWarshalAlgorithm(graphOfVerticesWithEdges);
         int avgOfProbLessThanZero = findAverageOfGraph(matrixWithOfProbLessThanZero);
@@ -39,7 +39,7 @@ public class Main {
         TreeMap<Integer, Integer> kk = findNodesWithSameDegree(graphOfVerticesWithEdges, avgOfProbLessThanZero);
         dds.connectedComponents();
 
-        XYChart ccOfDegreesChart = new XYChartBuilder().width(600).height(500).title("Degree distrubutin of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - amount").build();
+        XYChart ccOfDegreesChart = new XYChartBuilder().width(600).height(500).title("Degree distrubution of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - amount").build();
         List<Integer> vv = kk.values().stream().collect(Collectors.toList());
         List<Integer> nodes = createNodesUpToMax(avgOfProbLessThanZero);
         ccOfDegreesChart.addSeries("Degree distribution of nodes' degrees with lower prob", nodes, vv);
@@ -47,12 +47,12 @@ public class Main {
         ccOfDegreesChart.getStyler().setChartTitleVisible(false);
         ccOfDegreesChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         ccOfDegreesChart.getStyler().setMarkerSize(16);
-//        new SwingWrapper(ccOfDegreesChart).displayChart();
+        new SwingWrapper(ccOfDegreesChart).displayChart();
 
 
         System.out.println();
         TreeMap<Integer, List<Integer>> graphOfVerticesWithProbEqual = generateRandomGraph(NUMBER_OF_NODES);
-        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdgesWithProbEqual = generateRandomEdges(graphOfVerticesWithProbEqual, 0.11); //0.001842
+        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdgesWithProbEqual = generateRandomEdges(graphOfVerticesWithProbEqual, 0.001); //0.001842
         System.out.println("for global average degree equal to 1: " + calcGlobalAverage(graphOfVerticesWithEdgesWithProbEqual));
         int[][] matrixWithProbEqual = floydWarshalAlgorithm(graphOfVerticesWithEdgesWithProbEqual);
         int avgWithProbEqual = findAverageOfGraph(matrixWithProbEqual);
@@ -62,7 +62,7 @@ public class Main {
         DFS dd = new DFS(NUMBER_OF_NODES, graphOfVerticesWithEdgesWithProbEqual);
 
         TreeMap<Integer, Integer> kkequal = findNodesWithSameDegree(graphOfVerticesWithEdgesWithProbEqual, avgWithProbEqual);
-        XYChart distDegreesChartEqual = new XYChartBuilder().width(600).height(500).title("Degree distrubutin of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - amount").build();
+        XYChart distDegreesChartEqual = new XYChartBuilder().width(600).height(500).title("Degree distrubution of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - amount").build();
         List<Integer> vvEq = kkequal.values().stream().collect(Collectors.toList());
         List<Integer> nodesEq = createNodesUpToMax(avgWithProbEqual);
         distDegreesChartEqual.addSeries("Degree distribution of nodes' degrees with equal prob", nodesEq, vvEq);
@@ -70,7 +70,7 @@ public class Main {
         distDegreesChartEqual.getStyler().setChartTitleVisible(false);
         distDegreesChartEqual.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         distDegreesChartEqual.getStyler().setMarkerSize(16);
-//        new SwingWrapper(distDegreesChartEqual).displayChart();
+        new SwingWrapper(distDegreesChartEqual).displayChart();
 
         dd.connectedComponents();
 
@@ -101,7 +101,7 @@ public class Main {
 
         System.out.println();
         TreeMap<Integer, List<Integer>> graphOfVerticesWithProbHigher = generateRandomGraph(NUMBER_OF_NODES);
-        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdgesWithProbHigher = generateRandomEdges(graphOfVerticesWithProbHigher, 0.18); //0.0028
+        TreeMap<Integer, List<Integer>> graphOfVerticesWithEdgesWithProbHigher = generateRandomEdges(graphOfVerticesWithProbHigher, 0.002); //0.0028
         System.out.println("for global average degree equal higher than 1: " + calcGlobalAverage(graphOfVerticesWithEdgesWithProbHigher));
         int[][] matrixWithProbHigher = floydWarshalAlgorithm(graphOfVerticesWithEdgesWithProbHigher);
         int avgWithProbHigher = findAverageOfGraph(matrixWithProbHigher);
@@ -120,7 +120,7 @@ public class Main {
         distDegreesChartHigher.getStyler().setChartTitleVisible(false);
         distDegreesChartHigher.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         distDegreesChartHigher.getStyler().setMarkerSize(16);
-//        new SwingWrapper(distDegreesChartHigher).displayChart();
+        new SwingWrapper(distDegreesChartHigher).displayChart();
 
     }
 

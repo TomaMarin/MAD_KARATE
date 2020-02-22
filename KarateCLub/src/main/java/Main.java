@@ -10,12 +10,16 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         List<List<String>> records = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader("KarateClub.csv"))) {
             String line;
@@ -49,7 +53,12 @@ public class Main {
             }
         }
 
-
+        int[][] matrixArrayWithoutZero = new int[matrixArray.length - 1][matrixArray.length - 1];
+        for (int i = 1; i < matrixArray.length; i++) {
+            for (int j = 1; j < matrixArray.length; j++) {
+                matrixArrayWithoutZero[i - 1][j - 1] = matrixArray[i][j];
+            }
+        }
         System.out.println(matrixArray.length);
         System.out.println();
 
@@ -91,6 +100,7 @@ public class Main {
         for (int i = 0; i < xData.length; i++) {
             xData[i] = i;
         }
+
         chart.addSeries("Frequency of matrix", (xData), yData);
         chart.getStyler().setDefaultSeriesRenderStyle(CategorySeries.CategorySeriesRenderStyle.Bar);
         chart.getStyler().setChartTitleVisible(false);
@@ -150,40 +160,239 @@ public class Main {
                 totalCoefNumber += result;
             }
 
-            System.out.println("For node " + node + ", the CC is: " + nodesWithCoeficients.get(node));
+//            System.out.println("For node " + node + ", the CC is: " + nodesWithCoeficients.get(node));
 
         }
 
         totalCoefNumber = (totalCoefNumber) / 34;
         System.out.println("Total average CC of nodes is: " + totalCoefNumber);
-      TreeMap<Integer,List<Integer> > nodesWithSameDegree  = findNodesWithSameDegree(histogramData,17);
-      double[] ccOfDegrees =   calculateCCOfDegreesOfNodes(nodesWithSameDegree,nodesWithCoeficients);
-      double[] degrees =   new double[18];
-        for (int i = 0; i <nodesWithSameDegree.keySet().size() ; i++) {
-            degrees[i] = (double)(i);
+        TreeMap<Integer, List<Integer>> nodesWithSameDegree = findNodesWithSameDegree(histogramData, 17);
+        double[] ccOfDegrees = calculateCCOfDegreesOfNodes(nodesWithSameDegree, nodesWithCoeficients);
+        double[] degrees = new double[18];
+        for (int i = 1; i < nodesWithSameDegree.keySet().size(); i++) {
+            if (i == 0)
+                continue;
+            if (i != 1 && ccOfDegrees[i] == 0)
+                continue;
+            degrees[i] = (double) (i);
         }
+        ccOfDegrees[0] = Double.NaN;
+        degrees[0] = Double.NaN;
         XYChart ccOfDegreesChart = new XYChartBuilder().width(600).height(500).title("Cluster coeficient of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - cc").build();
-        
+
         ccOfDegreesChart.addSeries("Cluster coeficient of nodes' degrees", degrees, ccOfDegrees);
         ccOfDegreesChart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Scatter);
         ccOfDegreesChart.getStyler().setChartTitleVisible(false);
         ccOfDegreesChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         ccOfDegreesChart.getStyler().setMarkerSize(16);
-        new SwingWrapper(ccOfDegreesChart).displayChart();
+//        new SwingWrapper(ccOfDegreesChart).displayChart();
+
+        double[][] similarityMatrix = createSimilarityMatrix(matrixArrayWithoutZero);
+        System.out.println(similarityMatrix);
+        writeValuesToFile(similarityMatrix, "similarityMatrix.csv");
+        ClusterRow[] clusteringResults = findMostSimilarCluster(similarityMatrix);
+
+    }
+
+    private static void writeValuesToFile(double[][] vals, String fileName) throws IOException {
+        FileWriter writer = new FileWriter(fileName, false);
+        for (int i = 0; i < vals.length; i++) {
+            for (int j = 0; j < vals.length; j++) {
+                if (j == vals.length - 1) {
+                    writer.write(vals[i][j] + "");
+                } else {
+                    writer.write(vals[i][j] + ",");
+                }
+            }
+            writer.write("\r\n");   // write new line
+        }
+        writer.close();
+    }
+
+    private static int returnIndexOfClusterByElementIndex(int index, ClusterRow[] rows) {
+        for (int i = 0; i < rows.length; i++) {
+            if (rows[i].getIndexes().contains(index)) {
+                return i;
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+
+    private static boolean areMoreZeroedRowsThanNumber(int number, ClusterRow[] rows) {
+        int numberOfNonZeroedRows = 0;
+        for (ClusterRow r : rows) {
+            if (!r.isMergedRow()) {
+                numberOfNonZeroedRows++;
+            }
+        }
+        return numberOfNonZeroedRows >= number;
+    }
+
+    private static ClusterRow[] findMostSimilarCluster(double[][] similarityMatrix) {
+        for (int i = 0; i < similarityMatrix.length; i++) {
+            for (int j = 0; j < similarityMatrix.length; j++) {
+                if (i == j) {
+                    similarityMatrix[i][j] = 0.0;
+                }
+            }
+        }
+
+        double mostSimilarClusterValue = 0.0;
+        int indexI = 0;
+        int indexJ = 0;
+        double[][] clusterMatrix = similarityMatrix;
+        List<Integer> ssss = new ArrayList<>();
+        int counter = 0;
+        final int N = 3;
+
+        ClusterRow[] rows = new ClusterRow[similarityMatrix.length];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = new ClusterRow(similarityMatrix[i], new ArrayList<>(Collections.singletonList(i)));
+        }
+        while (areMoreZeroedRowsThanNumber(N, rows)) {
+            mostSimilarClusterValue = 0.0;
+            indexI = 0;
+            indexJ = 0;
+            for (int i = 0; i < rows.length; i++) {
+                for (int j = 0; j < rows.length; j++) {
+                    if (rows[i].getProbabilities()[j] != 0.0 && i != j && !rows[i].isMergedRow()) {
+                        if (mostSimilarClusterValue < rows[i].getProbabilities()[j]) {
+                            mostSimilarClusterValue = rows[i].getProbabilities()[j];
+                            indexI = i;
+                            indexJ = j;
+                        }
+                    }
+                }
+            }
+            if (returnIndexOfClusterByElementIndex(indexJ, rows) != Integer.MAX_VALUE) {
+                indexJ = returnIndexOfClusterByElementIndex(indexJ, rows);
+            }
+
+            rows[indexI].setProbabilities(createRowFrom2Rows(indexI, indexJ, rows));
+            rows[indexI].setIndexes(setIndexesFrom2Rows(indexI, indexJ, rows));
+            double[] probsToZeroOut = rows[indexJ].getProbabilities();
+            Arrays.fill(probsToZeroOut, 0.0);
+            if (indexI != indexJ) {
+                rows[indexJ].setProbabilities(probsToZeroOut);
+                rows[indexJ].setIndexes(new ArrayList<>());
+            }
+        }
+       rows = Arrays.stream(rows).filter(clusterRow ->clusterRow.getIndexes().size()==0 ).collect(Collectors.toList()).toArray(rows);
+        return rows;
+    }
+
+    private static List<Integer> setIndexesFrom2Rows(int iIndexOfRowToMerge, int jIndexOfRowToMerge, ClusterRow[] rows) {
+        List<Integer> indexesOfCluster = rows[iIndexOfRowToMerge].getIndexes();
+        indexesOfCluster.sort(Integer::compareTo);
+        if (!indexesOfCluster.contains(jIndexOfRowToMerge)) {
+            indexesOfCluster.add(jIndexOfRowToMerge);
+        }
+        for (Integer index : rows[jIndexOfRowToMerge].getIndexes()) {
+            if (!indexesOfCluster.contains(index)) {
+                indexesOfCluster.add(index);
+            }
+        }
+        return indexesOfCluster;
+    }
+
+    private static double[] createRowFrom2Rows(int iIndexOfRowToMerge, int jIndexOfRowToMerge, ClusterRow[] rows) {
+        double[] mergedRow = new double[rows.length];
+        for (int i = 0; i < rows.length; i++) {
+            if (!rows[iIndexOfRowToMerge].getIndexes().contains(i)) {
+                if (rows[iIndexOfRowToMerge].getProbabilities()[i] > rows[jIndexOfRowToMerge].getProbabilities()[i]) {
+                    mergedRow[i] = rows[iIndexOfRowToMerge].getProbabilities()[i];
+                } else {
+                    mergedRow[i] = rows[jIndexOfRowToMerge].getProbabilities()[i];
+                }
+            }
+        }
+        mergedRow[jIndexOfRowToMerge] = 0.0;
+        return mergedRow;
+    }
+
+    private static int calculateDegreeOfNode(int[] node) {
+        int numberOfEdges = 0;
+        for (int i = 0; i < node.length; i++) {
+            if (node[i] == 1) {
+                numberOfEdges++;
+            }
+        }
+        return numberOfEdges;
+    }
+
+    private static double[][] createSimilarityMatrix(int[][] adjacencyMatrix) {
+        double[][] similarityMatrix = new double[adjacencyMatrix.length][adjacencyMatrix.length];
+        for (int i = 0; i < similarityMatrix.length; i++) {
+            for (int j = 0; j < similarityMatrix.length; j++) {
+                int numberOfNeighbors = findNeighbors(adjacencyMatrix[i], adjacencyMatrix[j]);
+                int degreeofI = calculateDegreeOfNode(adjacencyMatrix[i]);
+                int degreeofJ = calculateDegreeOfNode(adjacencyMatrix[j]);
+
+                similarityMatrix[i][j] = calculateCosineSimilarity(numberOfNeighbors, degreeofI, degreeofJ);
+            }
+        }
+        return similarityMatrix;
+    }
+
+    private static double calculateCosineSimilarity(int numberOfNeighbors, double rowADegree, double rowBDegree) {
+        return (double) numberOfNeighbors / Math.sqrt(rowADegree * rowBDegree);
+    }
+
+    private static int findNeighbors(int[] rowA, int[] rowB) {
+        int numberOfNeighbors = 0;
+        for (int i = 0; i < rowA.length; i++) {
+            if (rowA[i] == 1 && rowB[i] == 1) {
+                numberOfNeighbors++;
+            }
+        }
+        return numberOfNeighbors;
+    }
+
+    private static HashMap<Integer, Integer[]> findKNearestNeighborsForDataSet(double[][] matrixArray, int k) {
+        double[][] neigbors = new double[matrixArray.length][k];
+        HashMap<Integer, Integer[]> nearestsNeighbors = new HashMap<>();
+        for (int i = 0; i < matrixArray.length; i++) {
+            nearestsNeighbors.put(i, findKNearestNeighbors(matrixArray[i], k, i));
+        }
+        return nearestsNeighbors;
     }
 
 
-    private static double[] calculateCCOfDegreesOfNodes(TreeMap<Integer,List<Integer>> data,  TreeMap<Integer, Double> nodesWithCoeficients){
+    private static Integer[] findKNearestNeighbors(double[] row, int k, int rowIndex) {
+        Integer[] nearestNeighbors = new Integer[k];
+        Integer[] example = new Integer[k];
+        List<Integer> minIndexes = new LinkedList<>();
+        for (int i = 0; i < k; i++) {
+            double min = Double.MAX_VALUE;
+            int minIndex = 0;
+
+
+            for (int j = 0; j < row.length; j++) {
+                if (row[j] < min && !minIndexes.contains(j) && j != rowIndex) {
+                    min = row[j];
+                    minIndex = j;
+                }
+            }
+            minIndexes.add(minIndex);
+        }
+        nearestNeighbors = minIndexes.toArray(example);
+        return nearestNeighbors;
+    }
+
+    private static double[] calculateCCOfDegreesOfNodes(TreeMap<Integer, List<Integer>> data, TreeMap<Integer, Double> nodesWithCoeficients) {
         double[] ccOfNodes = new double[data.keySet().size()];
 
-        for (int i = 1; i < ccOfNodes.length ; i++) {
-           double ccValOfAllNdodes = 0.0;
-            for (int j = 0; j < data.get(i).size() ; j++) {
+        for (int i = 1; i < ccOfNodes.length; i++) {
+            double ccValOfAllNdodes = 0.0;
+            for (int j = 0; j < data.get(i).size(); j++) {
                 ccValOfAllNdodes += nodesWithCoeficients.get(data.get(i).get(j));
             }
-            ccOfNodes[i] = Double.isNaN(ccValOfAllNdodes/data.get(i).size()) ? 0.0 : ccValOfAllNdodes/data.get(i).size();
+            if (Double.isNaN(ccValOfAllNdodes / data.get(i).size()))
+                continue;
+            ccOfNodes[i] = Double.isNaN(ccValOfAllNdodes / data.get(i).size()) ? 0.0 : ccValOfAllNdodes / data.get(i).size();
         }
-        return  ccOfNodes;
+        ccOfNodes[0] = Double.NaN;
+        return ccOfNodes;
     }
 
     private static int calculateNumberOfVerticesOfNeighbours(int node, List<Integer> neighboursList, int[][] matrix) {
@@ -303,7 +512,7 @@ public class Main {
             }
 
         }
-        return  nodesWithSameDegree;
+        return nodesWithSameDegree;
 
     }
 
