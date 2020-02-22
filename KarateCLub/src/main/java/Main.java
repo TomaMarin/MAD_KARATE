@@ -1,3 +1,7 @@
+import com.sun.prism.paint.Color;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.SingleGraph;
 import org.knowm.xchart.CategoryChart;
 import org.knowm.xchart.CategorySeries;
 import org.knowm.xchart.SwingWrapper;
@@ -13,6 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -191,7 +196,32 @@ public class Main {
         System.out.println(similarityMatrix);
         writeValuesToFile(similarityMatrix, "similarityMatrix.csv");
         ClusterRow[] clusteringResults = findMostSimilarCluster(similarityMatrix);
+        double k = 0.0;
+        Graph graph = new SingleGraph("Tutorial 1");
+        graph.addAttribute("ui.stylesheet", "url('file:E:/Documents/skola/ING/1.semester/MADI/git_repo/MAD_KARATE/KarateCLub/src/main/resources/ui.stylesheet.css')");
 
+        for (int i = 0; i < clusteringResults.length; i++) {
+            if (!clusteringResults[i].getIndexes().isEmpty()) {
+                for (int j = 0; j < clusteringResults[i].getIndexes().size(); j++) {
+
+                    graph.addNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).setAttribute("ui.color", k);
+                }
+                k+=0.5;
+            }
+        }
+
+//        for (int i = 0; i < matrixArray.length; i++) {
+//            graph.addNode(Integer.toString(i)).setAttribute("ui.color", 0);
+//        }
+        for (int i = 0; i < matrixArrayWithoutZero.length; i++) {
+            for (int j = i; j < matrixArrayWithoutZero.length; j++) {
+                if (matrixArrayWithoutZero[i][j] == 1) {
+
+                    graph.addEdge((Integer.toString(i).concat(Integer.toString(j))), i, j);
+                }
+            }
+        }
+        graph.display();
     }
 
     private static void writeValuesToFile(double[][] vals, String fileName) throws IOException {
@@ -277,7 +307,7 @@ public class Main {
                 rows[indexJ].setIndexes(new ArrayList<>());
             }
         }
-       rows = Arrays.stream(rows).filter(clusterRow ->clusterRow.getIndexes().size()==0 ).collect(Collectors.toList()).toArray(rows);
+//        rows = Arrays.stream(rows).filter(clusterRow -> clusterRow.getIndexes().size() == 0).collect(Collectors.toList()).toArray(rows);
         return rows;
     }
 
