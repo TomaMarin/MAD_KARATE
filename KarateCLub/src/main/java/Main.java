@@ -183,14 +183,6 @@ public class Main {
         }
         ccOfDegrees[0] = Double.NaN;
         degrees[0] = Double.NaN;
-        XYChart ccOfDegreesChart = new XYChartBuilder().width(600).height(500).title("Cluster coeficient of nodes' degrees").xAxisTitle("X - nodes").yAxisTitle("Y - cc").build();
-
-        ccOfDegreesChart.addSeries("Cluster coeficient of nodes' degrees", degrees, ccOfDegrees);
-        ccOfDegreesChart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Scatter);
-        ccOfDegreesChart.getStyler().setChartTitleVisible(false);
-        ccOfDegreesChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
-        ccOfDegreesChart.getStyler().setMarkerSize(16);
-//        new SwingWrapper(ccOfDegreesChart).displayChart();
 
         double[][] similarityMatrix = createSimilarityMatrix(matrixArrayWithoutZero);
         System.out.println(similarityMatrix);
@@ -205,6 +197,7 @@ public class Main {
                 for (int j = 0; j < clusteringResults[i].getIndexes().size(); j++) {
 
                     graph.addNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).setAttribute("ui.color", k);
+                    graph.getNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).addAttribute("ui.label", Integer.toString(clusteringResults[i].getIndexes().get(j) +1));
                 }
                 k+=0.5;
             }
@@ -342,8 +335,8 @@ public class Main {
 
     private static int calculateDegreeOfNode(int[] node) {
         int numberOfEdges = 0;
-        for (int i = 0; i < node.length; i++) {
-            if (node[i] == 1) {
+        for (int value : node) {
+            if (value == 1) {
                 numberOfEdges++;
             }
         }
