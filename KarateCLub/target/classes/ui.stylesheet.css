@@ -1,4 +1,27 @@
 node {
     fill-mode: dyn-plain;
     fill-color: blue, yellow, black, orange, green, red;
+    text-size:15px;
+    stroke-mode: plain;
+    stroke-color: black;
+    size:20px;
+}
+node.level4 {
+    fill-color: green;
+    size: 12px;
+}
+
+node.level3 {
+    fill-color: blue;
+    size: 13px;
+}
+
+node.level2 {
+    fill-color: yellow;
+    size: 14px;
+}
+
+node.level1 {
+    fill-color: red;
+    size: 15px;
 }

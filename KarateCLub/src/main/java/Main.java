@@ -48,7 +48,7 @@ public class Main {
             }
         }
 
-//        Matrix array value init
+        //        Matrix array value init
         for (int i = 0; i <= maxArrayNumber; i++) {
             for (int j = 0; j < records.size(); j++) {
                 if (i == Integer.parseInt(records.get(j).get(0))) {
@@ -112,7 +112,7 @@ public class Main {
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         chart.getStyler().setMarkerSize(16);
 
-//        new SwingWrapper(chart).displayChart();
+        //        new SwingWrapper(chart).displayChart();
 
         double[] yDataofRelativeFreq = calculateRelativeFrequency(yData, maxArrayNumber);
         double[] xDataofRelativefreq = new double[xData.length];
@@ -126,7 +126,7 @@ public class Main {
         relFrequencyChart.getStyler().setChartTitleVisible(false);
         relFrequencyChart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideE);
         relFrequencyChart.getStyler().setMarkerSize(16);
-//        new SwingWrapper(relFrequencyChart).displayChart();
+        //        new SwingWrapper(relFrequencyChart).displayChart();
 
         TreeMap<Integer, List<Integer>> neighboursOfAllNodes = new TreeMap<>();
         for (int i = 1; i < matrixArray.length; i++) {
@@ -138,7 +138,7 @@ public class Main {
             neighboursOfAllNodes.put(i, findAllNeighboursOfNode(i, matrixArray));
         }
 
-//        int node = 2;
+        //        int node = 2;
         TreeMap<Integer, Double> nodesWithCoeficients = new TreeMap<>();
         for (int i = 1; i < 35; i++) {
             nodesWithCoeficients.put(i, 0.0);
@@ -165,7 +165,7 @@ public class Main {
                 totalCoefNumber += result;
             }
 
-//            System.out.println("For node " + node + ", the CC is: " + nodesWithCoeficients.get(node));
+            //            System.out.println("For node " + node + ", the CC is: " + nodesWithCoeficients.get(node));
 
         }
 
@@ -188,33 +188,143 @@ public class Main {
         System.out.println(similarityMatrix);
         writeValuesToFile(similarityMatrix, "similarityMatrix.csv");
         ClusterRow[] clusteringResults = findMostSimilarCluster(similarityMatrix);
-        double k = 0.0;
-        Graph graph = new SingleGraph("Tutorial 1");
-        graph.addAttribute("ui.stylesheet", "url('file:E:/Documents/skola/ING/1.semester/MADI/git_repo/MAD_KARATE/KarateCLub/src/main/resources/ui.stylesheet.css')");
+//        Graph graph = new SingleGraph("Tutorial 1");
+//        graph.addAttribute("ui.stylesheet", "url('file:E:/Documents/skola/ING/1.semester/MADI/git_repo/MAD_KARATE/KarateCLub/src/main/resources/ui.stylesheet.css')");
+//
+//        for (int i = 0; i < clusteringResults.length; i++) {
+//            if (!clusteringResults[i].getIndexes().isEmpty()) {
+//                for (int j = 0; j < clusteringResults[i].getIndexes().size(); j++) {
+//
+//                    graph.addNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).setAttribute("ui.color", k);
+//                    graph.getNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).addAttribute("ui.label", Integer.toString(clusteringResults[i].getIndexes().get(j) + 1));
+//                }
+//                k += 0.5;
+//            }
+//        }
+//
+//        for (int i = 0; i < matrixArrayWithoutZero.length; i++) {
+//            for (int j = i; j < matrixArrayWithoutZero.length; j++) {
+//                if (matrixArrayWithoutZero[i][j] == 1) {
+//
+//                    graph.addEdge((Integer.toString(i).concat(Integer.toString(j))), i, j);
+//                }
+//            }
+//        }
+//                graph.display();
 
-        for (int i = 0; i < clusteringResults.length; i++) {
-            if (!clusteringResults[i].getIndexes().isEmpty()) {
-                for (int j = 0; j < clusteringResults[i].getIndexes().size(); j++) {
+        Graph graphk = new SingleGraph("Tutorial 2");
+        graphk.addAttribute("ui.stylesheet", "url('file:E:/Documents/skola/ING/1.semester/MADI/git_repo/MAD_KARATE/KarateCLub/src/main/resources/ui.stylesheet.css')");
 
-                    graph.addNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).setAttribute("ui.color", k);
-                    graph.getNode(Integer.toString(clusteringResults[i].getIndexes().get(j))).addAttribute("ui.label", Integer.toString(clusteringResults[i].getIndexes().get(j) +1));
-                }
-                k+=0.5;
+
+        int[][] kCore1 = rowsWithKAndMoreDegree(1, matrixArrayWithoutZero);
+        int[][] kCore2 = rowsWithKAndMoreDegree(2, matrixArrayWithoutZero);
+        int[][] kCore3 = rowsWithKAndMoreDegree(3, matrixArrayWithoutZero);
+        int[][] kCore4 = rowsWithKAndMoreDegree(4, matrixArrayWithoutZero);
+        List<Integer> integers1 = findIndexesNotZeroedRows(kCore1);
+        List<Integer> integers2 = findIndexesNotZeroedRows(kCore2);
+        List<Integer> integers3 = findIndexesNotZeroedRows(kCore3);
+        List<Integer> integers4 = findIndexesNotZeroedRows(kCore4);
+        System.out.println("d");
+        String colorLevel = "";
+        for (int i = 0; i < matrixArrayWithoutZero.length; i++) {
+            if (integers4.contains(i)) {
+               colorLevel = "level4";
+            } else if (integers3.contains(i)) {
+                colorLevel = "level3";
+            } else if (integers2.contains(i)) {
+                colorLevel = "level2";
+            } else if (integers1.contains(i)) {
+                colorLevel = "level1";
             }
+//            graphk.addNode(Integer.toString(i)).setAttribute("ui.color", k);
+            graphk.addNode(Integer.toString(i)).setAttribute("ui.class", colorLevel);
+            graphk.getNode(Integer.toString(i)).addAttribute("ui.label", Integer.toString(i + 1));
+//
+
         }
 
-//        for (int i = 0; i < matrixArray.length; i++) {
-//            graph.addNode(Integer.toString(i)).setAttribute("ui.color", 0);
-//        }
         for (int i = 0; i < matrixArrayWithoutZero.length; i++) {
             for (int j = i; j < matrixArrayWithoutZero.length; j++) {
                 if (matrixArrayWithoutZero[i][j] == 1) {
+                    graphk.addEdge((Integer.toString(i).concat(Integer.toString(j))), i, j);
+                }
+            }
+        }
+        graphk.display();
+//        createGraph(integers1, kCore1).display();
+//        createGraph(integers2, kCore2).display();
+//        createGraph(integers3, kCore3).display();
+//        createGraph(integers4, kCore4).display();
+    }
 
+    private static Graph createGraph(List<Integer> integers, int[][] matrix) {
+        Graph graph = new SingleGraph("Tutorial 2");
+        graph.addAttribute("ui.stylesheet", "url('file:E:/Documents/skola/ING/1.semester/MADI/git_repo/MAD_KARATE/KarateCLub/src/main/resources/ui.stylesheet.css')");
+        for (int i = 0; i < matrix.length; i++) {
+//            if (integers.contains(i)) {
+            graph.addNode(Integer.toString(i));
+            graph.getNode(Integer.toString(i)).addAttribute("ui.label", Integer.toString(i + 1));
+//            }
+        }
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = i; j < matrix.length; j++) {
+                if (matrix[i][j] == 1) {
                     graph.addEdge((Integer.toString(i).concat(Integer.toString(j))), i, j);
                 }
             }
         }
-        graph.display();
+        for (int i = 0; i < matrix.length; i++) {
+            if (!integers.contains(i)) {
+                graph.removeNode(Integer.toString(i));
+            }
+        }
+
+        return graph;
+    }
+
+    private static List<Integer> findIndexesNotZeroedRows(int[][] matrix) {
+        List<Integer> indexes = new ArrayList<>();
+        for (int i = 0; i < matrix.length; i++) {
+            boolean isZeroed = false;
+            for (int j = 0; j < matrix.length; j++) {
+                if (matrix[i][j] == 1) {
+                    isZeroed = true;
+                    break;
+                }
+            }
+            if (isZeroed) {
+                indexes.add(i);
+            }
+        }
+        return indexes;
+    }
+
+    private static int[][] rowsWithKAndMoreDegree(int K, int[][] matrix) {
+        int[][] matrixOfIncidence = new int[matrix.length][matrix.length];
+        copy2DArray(matrix, matrixOfIncidence);
+        List<Integer> indexes = new ArrayList<>();
+        boolean isDeleted = false;
+        for (int i = 0; i < matrixOfIncidence.length; i++) {
+//                if(matrixOfIncidence[i])
+            if (calculateDegreeOfNode(matrixOfIncidence[i]) < K && !indexes.contains(i)) {
+                indexes.add(i);
+                isDeleted = true;
+                Arrays.fill(matrixOfIncidence[i], 0);
+                for (int j = 0; j < matrixOfIncidence.length; j++) {
+                    for (int k = 0; k < matrixOfIncidence.length; k++) {
+                        if (k == i) {
+                            matrixOfIncidence[j][k] = 0;
+                        }
+                    }
+                }
+            }
+            if (isDeleted) {
+                i = 0;
+                isDeleted = false;
+            }
+        }
+
+        return matrixOfIncidence;
     }
 
     private static void writeValuesToFile(double[][] vals, String fileName) throws IOException {
@@ -300,7 +410,7 @@ public class Main {
                 rows[indexJ].setIndexes(new ArrayList<>());
             }
         }
-//        rows = Arrays.stream(rows).filter(clusterRow -> clusterRow.getIndexes().size() == 0).collect(Collectors.toList()).toArray(rows);
+        //        rows = Arrays.stream(rows).filter(clusterRow -> clusterRow.getIndexes().size() == 0).collect(Collectors.toList()).toArray(rows);
         return rows;
     }
 
@@ -437,6 +547,16 @@ public class Main {
             }
         }
         return neighboursOfNode;
+    }
+
+
+    private static int[][] copy2DArray(int[][] source, int[][] target) {
+        for (int i = 0; i < source.length; i++) {
+            for (int j = 0; j < source.length; j++) {
+                target[i][j] = source[i][j];
+            }
+        }
+        return target;
     }
 
     private static int findMax(int[][] matrixArray) {
@@ -592,7 +712,7 @@ public class Main {
                 totalNumberOfshortesDistance += pathArray[i][j];
             }
         }
-//        double number = (double) 1 / pathArray.length - 1;
+        //        double number = (double) 1 / pathArray.length - 1;
         int V = pathArray.length - 1;
         double number = (double) 2 / ((V) * (V - 1));
         return (number * totalNumberOfshortesDistance) / 2;
@@ -610,8 +730,8 @@ public class Main {
             }
             System.out.println("for node " + i + " is closeness " + (double) (pathArray.length - 1) / (double) dOfI);
         }
-//         centrality = Arrays.stream(pathArray[1]).sum();
-//        return  (double)(pathArray.length)/centrality;
+        //         centrality = Arrays.stream(pathArray[1]).sum();
+        //        return  (double)(pathArray.length)/centrality;
     }
 
 }
